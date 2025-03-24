@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const clerkUser = await currentUser();
     if (!clerkUser) {
@@ -46,7 +46,7 @@ export async function POST() {
       { message: "Profile created successfully." },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in create-profile API:", error);
     return NextResponse.json(
       { error: "Internal Server Error." },

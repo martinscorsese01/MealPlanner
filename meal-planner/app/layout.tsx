@@ -4,7 +4,7 @@ import "./globals.css";
 import NavBar from "../components/navbar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ReactQueryClientProvider } from "../components/react-query-client-provider";
-import CreateProfileOnSignIn from "@/components/create-profile";
+import CreateProfileOnSignIn from "../components/create-profile";
 
 export const metadata: Metadata = {
   title: "AI Meal Plans | Simple SaaS Demo",

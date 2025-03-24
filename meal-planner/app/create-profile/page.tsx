@@ -1,23 +1,56 @@
-'use client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { currentUser } from "@clerk/nextjs/server";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+export async function POST(request: NextRequest) {
+  try {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json(
+        { error: "User not found in Clerk." },
+        { status: 404 }
+      );
+    }
 
-export default function CreateProfile() {
-  const router = useRouter();
+    const email = clerkUser.emailAddresses?.[0]?.emailAddress || "";
+    if (!email) {
+      return NextResponse.json(
+        { error: "User does not have an email address." },
+        { status: 400 }
+      );
+    }
 
-  useEffect(() => {
-    const create = async () => {
-      await fetch('/api/create-profile', { method: 'POST' });
-      router.push('/subscribe'); // after creating profile
-    };
+    // Check if profile already exists
+    const existingProfile = await prisma.profile.findUnique({
+      where: { userId: clerkUser.id },
+    });
 
-    create();
-  }, [router]);
+    if (existingProfile) {
+      // Profile already exists
+      return NextResponse.json({ message: "Profile already exists." });
+    }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p>Creating your profile...</p>
-    </div>
-  );
+    // Otherwise, create the profile
+    await prisma.profile.create({
+      data: {
+        userId: clerkUser.id,
+        email,
+        subscriptionActive: false,
+        subscriptionTier: null,
+        stripeSubscriptionId: null,
+      },
+    });
+
+    console.log(`Prisma profile created for user: ${clerkUser.id}`);
+    return NextResponse.json(
+      { message: "Profile created successfully." },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Error in create-profile API:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error." },
+      { status: 500 }
+    );
+  }
 }
