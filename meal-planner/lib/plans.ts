@@ -1,5 +1,3 @@
-// src/constants/plans.ts
-
 export interface Plan {
     name: string;
     amount: number;
